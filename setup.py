@@ -34,7 +34,7 @@ setup(
         'built on top of Flask-SQLAlchemy.'
     ),
     long_description=__doc__,
-    packages=['wtforms_alchemy'],
+    packages=['flask_alchemy'],
     zip_safe=False,
     include_package_data=True,
     platforms='any',
