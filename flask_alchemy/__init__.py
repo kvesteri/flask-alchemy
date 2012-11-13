@@ -1,9 +1,9 @@
 from flask.ext.sqlalchemy import BaseQuery as _BaseQuery
-from .search import SearchMixin, Searchable
+from .search import SearchQueryMixin, Searchable
 
 
 __all__ = (
-    SearchMixin,
+    SearchQueryMixin,
     Searchable,
 )
 

@@ -2,7 +2,7 @@ from sqlalchemy import event
 from sqlalchemy.schema import DDL
 
 
-class SearchMixin(object):
+class SearchQueryMixin(object):
     def search_filter(self, term, tablename=None):
         if not tablename:
             tablename = self._entities[0].entity_zero.local_table.name
