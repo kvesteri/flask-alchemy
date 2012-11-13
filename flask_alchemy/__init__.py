@@ -1,4 +1,11 @@
 from flask.ext.sqlalchemy import BaseQuery as _BaseQuery
+from .search import SearchMixin, Searchable
+
+
+__all__ = (
+    SearchMixin,
+    Searchable,
+)
 
 
 class BaseQuery(_BaseQuery):

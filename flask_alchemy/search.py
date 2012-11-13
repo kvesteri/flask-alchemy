@@ -2,6 +2,28 @@ from sqlalchemy import event
 from sqlalchemy.schema import DDL
 
 
+class SearchMixin(object):
+    def search_filter(self, term, tablename=None):
+        if not tablename:
+            tablename = self._entities[0].entity_zero.local_table.name
+        return '%s.search_vector @@ to_tsquery(:term)' % tablename
+
+    def search(self, term, tablename=None):
+        """
+        Search text items with full text search.
+
+        :param term: the search term
+        """
+        if term:
+            terms = map(lambda a: a + ':*', term.split(' '))
+            return (
+                self.filter(self.search_filter(term, tablename))
+                .params(term=' & '.join(terms))
+            )
+        else:
+            return self
+
+
 class Searchable(object):
     def after_configured(self):
         # We don't want sqlalchemy to know about this column so we add it
