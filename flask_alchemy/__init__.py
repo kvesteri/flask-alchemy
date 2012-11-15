@@ -1,13 +1,12 @@
 from flask.ext.sqlalchemy import BaseQuery as _BaseQuery
 from .search import SearchQueryMixin, Searchable
-from .utils import sort_query, visible_page_numbers
+from .utils import sort_query
 
 
 __all__ = (
     SearchQueryMixin,
     Searchable,
     sort_query,
-    visible_page_numbers
 )
 
 

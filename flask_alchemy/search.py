@@ -1,5 +1,6 @@
 from sqlalchemy import event
 from sqlalchemy.schema import DDL
+from sqlalchemy.orm.mapper import Mapper
 
 
 class SearchQueryMixin(object):
@@ -24,15 +25,28 @@ class SearchQueryMixin(object):
             return self
 
 
+def attach_search_indexes(mapper, class_):
+    if issubclass(class_, Searchable):
+        class_.define_search_vector()
+
+
+# attach to all mappers
+event.listen(Mapper, 'instrument_class', attach_search_indexes)
+
+
 class Searchable(object):
-    def after_configured(self):
+    __searchable_columns__ = []
+
+    @classmethod
+    def define_search_vector(cls):
         # We don't want sqlalchemy to know about this column so we add it
         # externally.
-        table = self.__class__.__table__
+        table = cls.__table__
+        tablename = cls.__tablename__
         event.listen(
             table,
             'after_create',
-            DDL("ALTER TABLE product ADD COLUMN search_vector tsvector")
+            DDL("ALTER TABLE %s ADD COLUMN search_vector tsvector" % tablename)
         )
 
         # This indexes the tsvector column
@@ -40,19 +54,23 @@ class Searchable(object):
             table,
             'after_create',
             DDL("""
-            CREATE INDEX product_search_index ON product
-            USING gin(search_vector)""")
+            CREATE INDEX %s_search_index ON %s
+            USING gin(search_vector)""" % (tablename, tablename))
         )
 
         # This sets up the trigger that keeps the tsvector column up to date.
         event.listen(
             table,
             'after_create',
-            DDL("""CREATE TRIGGER product_search_update
-            BEFORE UPDATE OR INSERT ON product
+            DDL("""CREATE TRIGGER %s_search_update
+            BEFORE UPDATE OR INSERT ON %s
             FOR EACH ROW EXECUTE PROCEDURE
-                tsvector_update_trigger('search_vector',
-                                        'pg_catalog.english',
-                                        'name',
-                                        'description',
-                                        'extra_information')"""))
+            tsvector_update_trigger(
+                'search_vector',
+                'pg_catalog.english',
+                %s
+            )""" % (
+            tablename,
+            tablename,
+            ', '.join(map(lambda a: '%s' % a, cls.__searchable_columns__))
+        )))
