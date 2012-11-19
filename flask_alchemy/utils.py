@@ -54,3 +54,19 @@ def sort_query(query, sort):
                     pass
                 break
     return query
+
+
+
+def escape_like(string, escape_char='*'):
+    """
+    Escapes the string paremeter used in SQL LIKE expressions
+
+    :param string: a string to escape
+    :param escape_char: escape character
+    """
+    return (
+        string
+        .replace(escape_char, escape_char * 2)
+        .replace('%', escape_char + '%')
+        .replace('_', escape_char + '_')
+    )

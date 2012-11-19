@@ -1,3 +1,5 @@
+import re
+
 from sqlalchemy import event
 from sqlalchemy.schema import DDL
 from sqlalchemy.orm.mapper import Mapper
@@ -15,11 +17,15 @@ class SearchQueryMixin(object):
 
         :param term: the search term
         """
+
         if term:
-            terms = map(lambda a: a + ':*', term.split(' '))
+            # remove all multiple whitespaces
+            term = re.sub('\s+', ' ', term)
+            # split the term into words
+            words = map(lambda a: a + ':*', term.split(' '))
             return (
                 self.filter(self.search_filter(term, tablename))
-                .params(term=' & '.join(terms))
+                .params(term=' & '.join(words))
             )
         else:
             return self

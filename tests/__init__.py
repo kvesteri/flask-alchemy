@@ -43,4 +43,10 @@ class TestCase(object):
         db.create_all()
 
     def teardown_method(self, method):
+        db.session.remove()
         db.drop_all()
+        db.session.close_all()
+        db.engine.dispose()
+
+        self._app_context.pop()
+        self.app = None
