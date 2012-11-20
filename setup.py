@@ -24,7 +24,7 @@ class PyTest(Command):
 
 setup(
     name='flask-alchemy',
-    version='0.1.0',
+    version='0.1.1',
     url='https://github.com/kvesteri/flask-alchemy',
     license='BSD',
     author='Konsta Vesterinen',

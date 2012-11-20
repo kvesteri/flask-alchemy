@@ -24,3 +24,4 @@ class TestSearchQueryMixin(TestCase):
     def test_term_splitting_supports_multiple_spaces(self):
         assert Page.query.search('content  some').first().name == u'index'
         assert Page.query.search('content   some').first().name == u'index'
+        assert Page.query.search('  ').count() == 3

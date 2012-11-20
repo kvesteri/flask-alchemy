@@ -17,10 +17,9 @@ class SearchQueryMixin(object):
 
         :param term: the search term
         """
-
+        # remove all multiple whitespaces
+        term = re.sub('\s+', ' ', term).strip()
         if term:
-            # remove all multiple whitespaces
-            term = re.sub('\s+', ' ', term)
             # split the term into words
             words = map(lambda a: a + ':*', term.split(' '))
             return (
