@@ -17,17 +17,19 @@ class SearchQueryMixin(object):
 
         :param term: the search term
         """
+        if not term:
+            return self
         # remove all multiple whitespaces
         term = re.sub('\s+', ' ', term).strip()
-        if term:
-            # split the term into words
-            words = map(lambda a: a + ':*', term.split(' '))
-            return (
-                self.filter(self.search_filter(term, tablename))
-                .params(term=' & '.join(words))
-            )
-        else:
+        if not term:
             return self
+
+        # split the term into words
+        words = map(lambda a: a + ':*', term.split(' '))
+        return (
+            self.filter(self.search_filter(term, tablename))
+            .params(term=' & '.join(words))
+        )
 
 
 def attach_search_indexes(mapper, class_):
