@@ -21,6 +21,9 @@ class SearchQueryMixin(object):
             return self
         # remove all multiple whitespaces
         term = re.sub('\s+', ' ', term).strip()
+
+        # remove colon characters
+        term = term.replace(':', '')
         if not term:
             return self
 

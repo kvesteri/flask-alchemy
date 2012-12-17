@@ -38,7 +38,7 @@ class PaginationDecorator(object):
             'total': self.total
         }
 
-    def as_json_dict(self, *args, **kwargs):
+    def as_json(self, *args, **kwargs):
         return {
             'pagination': self.pagination_json(),
             'data': [item.as_json_dict(**kwargs) for item in self.items]
