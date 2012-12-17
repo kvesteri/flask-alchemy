@@ -27,4 +27,4 @@ class TestSearchQueryMixin(TestCase):
         assert Page.query.search('  ').count() == 3
 
     def test_search_removes_illegal_characters(self):
-        assert Page.query.search(':@#')
+        assert Page.query.search(':@#').count()
