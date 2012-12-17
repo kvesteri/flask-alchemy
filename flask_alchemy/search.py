@@ -5,33 +5,41 @@ from sqlalchemy.schema import DDL
 from sqlalchemy.orm.mapper import Mapper
 
 
+def safe_search_terms(query):
+    # Remove all illegal characters from the search query.
+    query = re.sub(r'[\W\s]+', ' ', query).strip()
+    if not query:
+        return []
+
+    # Split the search query into terms.
+    terms = query.split(' ')
+
+    # Search for words starting with the given search terms.
+    return map(lambda a: a + ':*', terms)
+
+
 class SearchQueryMixin(object):
     def search_filter(self, term, tablename=None):
         if not tablename:
             tablename = self._entities[0].entity_zero.local_table.name
         return '%s.search_vector @@ to_tsquery(:term)' % tablename
 
-    def search(self, term, tablename=None):
+    def search(self, search_query, tablename=None):
         """
         Search text items with full text search.
 
         :param term: the search term
         """
-        if not term:
-            return self
-        # remove all multiple whitespaces
-        term = re.sub('\s+', ' ', term).strip()
-
-        # remove all illegal characters
-        term = re.sub(r'^[\W\s]+', '', term)
-        if not term:
+        if not search_query:
             return self
 
-        # split the term into words
-        words = map(lambda a: a + ':*', term.split(' '))
+        terms = safe_search_terms(search_query)
+        if not terms:
+            return self
+
         return (
-            self.filter(self.search_filter(term, tablename))
-            .params(term=' & '.join(words))
+            self.filter(self.search_filter(search_query, tablename))
+            .params(term=' & '.join(terms))
         )
 
 
