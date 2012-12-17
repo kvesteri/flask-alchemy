@@ -26,5 +26,5 @@ class TestSearchQueryMixin(TestCase):
         assert Page.query.search('content   some').first().name == u'index'
         assert Page.query.search('  ').count() == 3
 
-    def test_search_removes_colon_characters(self):
-        assert Page.query.search(':')
+    def test_search_removes_illegal_characters(self):
+        assert Page.query.search(':@#')
