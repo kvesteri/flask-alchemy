@@ -1,4 +1,35 @@
 from tests import Page, TestCase, db
+from flask.ext.alchemy import BaseQuery, Searchable, SearchQueryMixin
+
+
+class TextItemQuery(BaseQuery, SearchQueryMixin):
+    pass
+
+
+class TextItem(db.Model, Searchable):
+    __searchable_columns__ = ['name', 'content']
+    __search_options__ = {
+        'tablename': 'textitem',
+        'search_vector_name': 'search_vector',
+        'search_trigger_name': '{table}_search_update',
+        'search_index_name': '{table}_search_index',
+        'catalog': 'pg_catalog.english'
+    }
+    __tablename__ = 'textitem'
+    query_class = TextItemQuery
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+
+    name = db.Column(db.Unicode(255))
+
+    content = db.Column(db.UnicodeText)
+
+
+class Article(TextItem):
+    __tablename__ = 'article'
+    id = db.Column(db.Integer, db.ForeignKey(TextItem.id), primary_key=True)
+
+    created_at = db.Column(db.DateTime)
 
 
 class TestSearchableMixin(TestCase):
@@ -28,3 +59,15 @@ class TestSearchQueryMixin(TestCase):
 
     def test_search_removes_illegal_characters(self):
         assert Page.query.search(':@#').count()
+
+
+class TestSearchableInheritance(TestCase):
+    def setup_method(self, method):
+        TestCase.setup_method(self, method)
+        db.session.add(Article(name=u'index', content=u'some content'))
+        db.session.add(Article(name=u'admin', content=u'admin content'))
+        db.session.add(Article(name=u'home', content=u'this is the home page'))
+        db.session.commit()
+
+    def test_supports_inheritance(self):
+        assert Article.query.search('content').count() == 2

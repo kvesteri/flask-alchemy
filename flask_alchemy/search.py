@@ -21,7 +21,12 @@ def safe_search_terms(query):
 class SearchQueryMixin(object):
     def search_filter(self, term, tablename=None):
         if not tablename:
-            tablename = self._entities[0].entity_zero.local_table.name
+            mapper = self._entities[0].entity_zero
+            entity = mapper.class_
+            if entity.__search_options__['tablename']:
+                tablename = entity.__search_options__['tablename']
+            else:
+                tablename = entity._inspect_searchable_tablename()
         return '%s.search_vector @@ to_tsquery(:term)' % tablename
 
     def search(self, search_query, tablename=None):
@@ -55,6 +60,7 @@ event.listen(Mapper, 'instrument_class', attach_search_indexes)
 class Searchable(object):
     __searchable_columns__ = []
     __search_options__ = {
+        'tablename': None,
         'search_vector_name': 'search_vector',
         'search_trigger_name': '{table}_search_update',
         'search_index_name': '{table}_search_index',
@@ -62,7 +68,24 @@ class Searchable(object):
     }
 
     @classmethod
+    def _inspect_searchable_tablename(cls):
+        """
+        Recursive method that returns the name of the searchable table. This is
+        method is needed for the inspection of tablenames in certain
+        inheritance scenarios such as joined table inheritance where only
+        parent is defined is searchable.
+        """
+        if Searchable in cls.__bases__:
+            return cls.__tablename__
+
+        for class_ in cls.__bases__:
+            return class_._inspect_searchable_tablename()
+
+    @classmethod
     def _search_vector_ddl(cls):
+        """
+        Returns the ddl for the search vector.
+        """
         tablename = cls.__tablename__
         options = cls.__search_options__
         search_vector_name = options['search_vector_name']
@@ -80,6 +103,9 @@ class Searchable(object):
 
     @classmethod
     def _search_index_ddl(cls):
+        """
+        Returns the ddl for creating the actual search index.
+        """
         tablename = cls.__tablename__
         options = cls.__search_options__
         search_vector_name = options['search_vector_name']
@@ -100,6 +126,9 @@ class Searchable(object):
 
     @classmethod
     def _search_trigger_ddl(cls):
+        """
+        Returns the ddl for creating an automatically updated search trigger.
+        """
         tablename = cls.__tablename__
         options = cls.__search_options__
         search_vector_name = options['search_vector_name']
@@ -127,6 +156,11 @@ class Searchable(object):
 
     @classmethod
     def define_search_vector(cls):
+        # In order to support joined table inheritance we need to ensure that
+        # this class directly inherits Searchable
+        if Searchable not in cls.__bases__:
+            return
+
         if not cls.__searchable_columns__:
             raise Exception(
                 "No searchable columns defined for model %s" % cls.__name__
