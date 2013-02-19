@@ -1,12 +1,8 @@
 from flask.ext.sqlalchemy import BaseQuery as _BaseQuery
-from .search import SearchQueryMixin, Searchable, safe_search_terms
 from .utils import sort_query, escape_like
 
 
 __all__ = (
-    SearchQueryMixin,
-    Searchable,
-    safe_search_terms,
     sort_query,
     escape_like,
 )
